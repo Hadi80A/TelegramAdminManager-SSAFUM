@@ -22,8 +22,11 @@ from telethon.tl.types import (
 
 api_id = os.environ["SSAFUM_apiID"]
 api_hash = os.environ["SSAFUM_apiHASH"]
-client = TelegramClient('main', api_id, api_hash)
 
+
+client = TelegramClient('main', api_id, api_hash)
+bot_token = ''
+#client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 
 channels = []  # (channel id, channel link, channel title)
 main_channel = {
@@ -36,6 +39,28 @@ main_group = {
 }
 keywords = []  # keywords: if the post include added keywords, won't be sent to the admins group
 
+def save_channels():
+  with open('channels.txt','w') as file:
+    for ch in channels:
+      file.write(f'{ch[0]},{ch[1]},{ch[2]}\n')
+
+def load_channels():
+  with open('channels.txt','r') as file:
+    for ch in file.readlines():
+      id,link,title=ch.split(',')
+      channels.append((id,link,title))
+  print('channels loaded')
+
+def save_keywords():
+  with open('keywords.txt','w') as file:
+    for keyword in keywords:
+      file.write(f'{keyword}\n')
+
+def load_keywords():
+  with open('keywords.txt','r') as file:
+    for keyword in file.readlines():
+      keyword.append(keyword)
+  print('keywords loaded')
 
 @client.on(events.NewMessage)
 async def my_event_handler(event):
@@ -70,8 +95,10 @@ async def commands(event):
                                     res += '✅عضویت کانال {}({}ام): موفق'.format(channel.title, i + 1) + '\n'
                                 if re.findall(r'(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-&?=%.]+', item):
                                     channels.append((channel.id, item, channel.title))
+                                    save_channels()
                                 else:
                                     channels.append((channel.id, 'https://t.me/' + item, channel.title))
+                                    save_channels()
                             except ValueError:
                                 res += '❌عضویت کانال {}ام: ناموفق(کانالی با این نشانی برای عضویت وجود ندارد)\n'.format(
                                     i+1)
@@ -91,8 +118,10 @@ async def commands(event):
                                 res += '✅ترک کانال {}({}ام): موفق'.format(channel.title, i + 1) + '\n'
                             if re.findall(r'(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-&?=%.]+', item):
                                 channels.remove((channel.id, item, channel.title))
+                                save_channels()
                             else:
                                 channels.remove((channel.id, 'https://t.me/' + item, channel.title))
+                                save_channels()
                         except ValueError:
                             res += '❌ترک کانال {}ام: ناموفق(کانالی با این نشانی برای ترک وجود ندارد)\n'.format(i + 1)
                         except TypeError:
@@ -101,10 +130,12 @@ async def commands(event):
             elif re.findall(r'(?i)add[ ]*keyword[s]$', event.raw_text):
                 for kw in strs[:len(strs) - 1]:
                     keywords.append(kw)
+                    save_keywords()
                 await event.reply('✅کليد واژه های مورد نظر با موفقیت اضافه شد')
             elif re.findall(r'(?i)remove[ ]*keywords$', event.raw_text):
                 for kw in strs[:len(strs) - 1]:
                     keywords.remove(kw)
+                    save_keywords()
                 await event.reply('✅کليد واژه های مورد نظر با موفقیت حذف شد')
             elif re.findall(r'(?i).*channel[s]?[ ]*list$', event.raw_text):
                 lc = len(channels)
@@ -217,6 +248,7 @@ async def post_archives(event):
         except MessageIdInvalidError:
             pass
 
-
+load_channels()
+load_keywords()
 client.start()
 client.run_until_disconnected()
