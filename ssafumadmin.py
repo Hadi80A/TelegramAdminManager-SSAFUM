@@ -1,7 +1,5 @@
 import re
 import os
-import sched
-import time
 from datetime import datetime, timezone, timedelta
 
 from telethon.errors.rpcerrorlist import(
@@ -24,9 +22,7 @@ api_id = os.environ["SSAFUM_apiID"]
 api_hash = os.environ["SSAFUM_apiHASH"]
 
 
-client = TelegramClient('main', api_id, api_hash)
-bot_token = ''
-#client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
+client = TelegramClient('bot', api_id, api_hash)
 
 channels = []  # (channel id, channel link, channel title)
 main_channel = {
@@ -40,27 +36,27 @@ main_group = {
 keywords = []  # keywords: if the post include added keywords, won't be sent to the admins group
 
 def save_channels():
-  with open('channels.txt','w') as file:
-    for ch in channels:
-      file.write(f'{ch[0]},{ch[1]},{ch[2]}\n')
+    with open('channels.txt','w') as file:
+        for ch in channels:
+            file.write(f'{ch[0]},{ch[1]},{ch[2]}\n')
 
 def load_channels():
-  with open('channels.txt','r') as file:
-    for ch in file.readlines():
-      id,link,title=ch.split(',')
-      channels.append((id,link,title))
-  print('channels loaded')
+    with open('channels.txt','r') as file:
+        for ch in file.readlines():
+            id,link,title=ch.split(',')
+            channels.append((id,link,title))
+    print('channels loaded')
 
 def save_keywords():
-  with open('keywords.txt','w') as file:
-    for keyword in keywords:
-      file.write(f'{keyword}\n')
+    with open('keywords.txt','w') as file:
+        for keyword in keywords:
+            file.write(f'{keyword}\n')
 
 def load_keywords():
-  with open('keywords.txt','r') as file:
-    for keyword in file.readlines():
-      keyword.append(keyword)
-  print('keywords loaded')
+    with open('keywords.txt','r') as file:
+        for keyword in file.readlines():
+            keyword.append(keyword)
+    print('keywords loaded')
 
 @client.on(events.NewMessage)
 async def my_event_handler(event):
